@@ -1,0 +1,2 @@
+ws-cleanup-plugin
+=================
