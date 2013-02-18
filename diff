@@ -1,0 +1,122 @@
+diff --git a/pom.xml b/pom.xml
+index 3653d3e..c430a2b 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -1,17 +1,20 @@
+-<?xml version="1.0" encoding="UTF-8"?>
++<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+ <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+   <modelVersion>4.0.0</modelVersion>
+   <parent>
+-    <groupId>org.jenkins-ci.plugins</groupId>
+-    <artifactId>plugin</artifactId>
+-    <version>1.447</version>
++    <groupId>org.eclipse.hudson.plugins</groupId>
++    <artifactId>hudson-plugin-parent</artifactId>
++    <version>3.0.0</version>
++  <relativePath/>
+   </parent>
+   
++  <groupId>org.hudsonci.plugins</groupId>
+   <artifactId>ws-cleanup</artifactId>
+   <packaging>hpi</packaging>
+-  <name>Jenkins Workspace Cleanup Plugin</name>
+-  <version>0.12</version>
+-  <url>http://wiki.jenkins-ci.org/display/JENKINS/Workspace+Cleanup+Plugin</url>
++  <name>Hudson Workspace Cleanup Plugin</name>
++  <description>Hudson Workspace Cleanup Plugin</description>
++  <version>0.12-h-1-SNAPSHOT</version>
++  <url>http://wiki.hudson-ci.org/display/HUDSON/Workspace+Cleanup+Plugin</url>
+ 
+   <developers>
+     <developer>
+@@ -21,31 +24,20 @@
+   </developers>
+ 
+   <scm>
+-    <connection>scm:git:git://github.com/jenkinsci/ws-cleanup-plugin.git</connection>
+-    <developerConnection>scm:git:git@github.com:jenkinsci/ws-cleanup-plugin.git</developerConnection>
+-    <url>https://github.com/jenkinsci/ws-cleanup-plugin</url>
++    <connection>scm:git:git://github.com/hudson3-plugins/ws-cleanup.git</connection>
++    <developerConnection>scm:git:git@github.com:hudson3-plugins/ws-cleanup.git</developerConnection>
++    <url>https://github.com/hudson3-plugins/ws-cleanup</url>
+   </scm>
+ 
+-  <repositories>
+-    <repository>
+-            <id>repo.jenkins-ci.org</id>
+-            <url>http://repo.jenkins-ci.org/public/</url>
+-    </repository>
+-  </repositories>
+-
+-  <distributionManagement>
+-    <repository>
+-      <id>maven.jenkins-ci.org</id>
+-      <url>http://maven.jenkins-ci.org:8081/content/repositories/releases/</url>
+-    </repository>
+-  </distributionManagement>
+-
+-
+-    <pluginRepositories>
+-        <pluginRepository>
+-            <id>repo.jenkins-ci.org</id>
+-            <url>http://repo.jenkins-ci.org/public/</url>
+-        </pluginRepository>
+-    </pluginRepositories>
+-</project>  
+-
++  <licenses>
++    <license>
++      <name>The MIT license</name>
++      <url>http://opensource.org/licenses/MIT</url>
++      <distribution>repo</distribution>
++    </license>
++  </licenses>
++  
++  <properties>
++    <hudsonTags>post-build</hudsonTags>
++  </properties>
++</project>
+diff --git a/src/main/java/hudson/plugins/ws_cleanup/PreBuildCleanup.java b/src/main/java/hudson/plugins/ws_cleanup/PreBuildCleanup.java
+index c15c42e..e9c3737 100644
+--- a/src/main/java/hudson/plugins/ws_cleanup/PreBuildCleanup.java
++++ b/src/main/java/hudson/plugins/ws_cleanup/PreBuildCleanup.java
+@@ -44,16 +44,17 @@ public class PreBuildCleanup extends BuildWrapper {
+ 		return (DescriptorImpl) super.getDescriptor();
+ 	}
+ 
+-	
++	/*
+ 	 @Override 
+ 	 public Environment setUp( AbstractBuild build, Launcher launcher, BuildListener listener ) throws IOException, InterruptedException{ 
+ 		 return new NoopEnv();
+ 	 }
++  */
+ 
+ 	@Override
+-	public void preCheckout(AbstractBuild build, Launcher launcher,
+-			BuildListener listener) throws AbortException {
+-		listener.getLogger().append("\nDeleting project workspace... \n");
++	public Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
++		Environment env = new NoopEnv();
++    listener.getLogger().append("\nDeleting project workspace... \n");
+ 		FilePath ws = build.getWorkspace();
+ 		if (ws != null) {
+ 			try {
+@@ -62,7 +63,7 @@ public class PreBuildCleanup extends BuildWrapper {
+ 				while (true) {
+ 					try {
+ 						if (ws == null || !ws.exists())
+-							return;
++							return env;
+ 						if (patterns == null || patterns.isEmpty()) {
+ 							ws.deleteRecursive();
+ 						} else {
+@@ -89,6 +90,7 @@ public class PreBuildCleanup extends BuildWrapper {
+ 				e.printStackTrace();
+ 			}
+ 		}
++    return env;
+ 	}
+ 
+ 	@Extension(ordinal=9999)
